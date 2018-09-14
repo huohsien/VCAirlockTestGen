@@ -15,7 +15,7 @@ class ViewController: UIViewController {
 
         //: Playground - noun: a place where people can play
         
-        
+        var delimiter: Character = "|"
         var toBeParsed: String = """
 Codabar,BarCodeGetSymbology(Codabar),,,
 ,enable,V,TRUE,"0, 1"
@@ -305,9 +305,9 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
         var hasOpeningQuote = false
         
         var lines: Array = toBeParsed.components(separatedBy: CharacterSet.newlines)
-        for i in 0..<lines.count {
-            print("#\(i):\(lines[i])")
-        }
+//        for i in 0..<lines.count {
+//            print("#\(i):\(lines[i])")
+//        }
         for i in 0..<lines.count {
             var line = lines[i]
             // find the first quotation mark in the line by traversing characters in the string
@@ -329,7 +329,7 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
                     // ### IMPORTANT #### CHECK IF "|" EVER OCCURS IN THE STRING!!!!
                     
                     line.remove(at: line.index(line.startIndex, offsetBy: i))
-                    line.insert("|", at: line.index(line.startIndex, offsetBy: i))
+                    line.insert(delimiter, at: line.index(line.startIndex, offsetBy: i))
                 }
             }
             // update processed line
@@ -355,7 +355,9 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
                         let fieldsOfNextLine = nextLine.components(separatedBy: ",")
                         if let firstFieldOfNextLine = fieldsOfNextLine.first {
                             if firstFieldOfNextLine.contains("\"") {
-                                // need to move the next line to the end of the current line
+                                // need to move the next line with no first field to the end of the current line
+                                let fieldsOfNextLine: [String] = nextLine.components(separatedBy: ",")
+
                                 quotationMarkProcessedLine.append(nextLine)
                                 quotationMarkProcessedLines.append(quotationMarkProcessedLine)
                                 isSkipingLine = true
