@@ -351,13 +351,18 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
             if let lastField = fields.last {
                 if lastField.contains("\"") {
                     if i < lines.count - 1 {
-                        let nextLine = lines[i+1]
+                        var nextLine = lines[i+1]
                         let fieldsOfNextLine = nextLine.components(separatedBy: ",")
                         if let firstFieldOfNextLine = fieldsOfNextLine.first {
                             if firstFieldOfNextLine.contains("\"") {
                                 // need to move the next line with no first field to the end of the current line
-                                let fieldsOfNextLine: [String] = nextLine.components(separatedBy: ",")
-
+                                let fieldsOfNextLine = nextLine.split(separator: ",")
+                                if let firstFieldsOfNextLine = fieldsOfNextLine.first {
+                                    let indexOfFirstCharacter = nextLine.index(nextLine.startIndex, offsetBy: firstFieldsOfNextLine.count)
+                                    
+                                    nextLine = "\(nextLine[indexOfFirstCharacter...])"
+                                    
+                                }
                                 quotationMarkProcessedLine.append(nextLine)
                                 quotationMarkProcessedLines.append(quotationMarkProcessedLine)
                                 isSkipingLine = true
