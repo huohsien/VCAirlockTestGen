@@ -15,8 +15,8 @@ class ViewController: UIViewController {
 
         //: Playground - noun: a place where people can play
         
-        var delimiter: Character = "|"
-        var toBeParsed: String = """
+        let delimiter: Character = "|"
+        let toBeParsed: String = """
 Codabar,BarCodeGetSymbology(Codabar),,,
 ,enable,V,TRUE,"0, 1"
 ,"transmitCheckDigit
@@ -301,21 +301,22 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
         //var valid_values = [String]()
         //var invalid_values = [String]()
         
-//        var currentSymbology: String
+        var currentSymbology: String
         var hasOpeningQuote = false
         
         var lines: Array = toBeParsed.components(separatedBy: CharacterSet.newlines)
-//        for i in 0..<lines.count {
-//            print("#\(i):\(lines[i])")
-//        }
+
         for i in 0..<lines.count {
             var line = lines[i]
-            // find the first quotation mark in the line by traversing characters in the string
+            
+            // find the quotation mark pairs and if there is a nextline character between a pair of quatation marks then remove the first item in the nextline and merge everything else in the next line into the current line to form a record
             let firstIndex = line.startIndex
             for i in 0..<line.count {
                 
+                // character for traversing the string
                 let charater = line[line.index(firstIndex, offsetBy: i)]
                
+                // flaging for occurrence of a quotation mark
                 if charater == "\"" {
                     if hasOpeningQuote == false {
                         hasOpeningQuote = true
@@ -324,6 +325,7 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
                     }
                 }
                 
+                // find comma in a pair of quotation marks, replace it with some delimiter that never appear in the string. so the followind code can use comma and next line character to extract a table of records
                 if charater == "," && hasOpeningQuote {
                     // need to change comma to something else so in the next step it won't confuse the parser
                     // ### IMPORTANT #### CHECK IF "|" EVER OCCURS IN THE STRING!!!!
@@ -336,7 +338,9 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
             lines[i] = line
         }
         
+        // variable to store the result
         var quotationMarkProcessedLines = [String]()
+        //flag when finding a multi-line record
         var isSkipingLine = false
         
         for i in 0..<lines.count {
@@ -345,6 +349,7 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
                 isSkipingLine = false
                 continue
             }
+            //default value
             var quotationMarkProcessedLine = lines[i]
 
             let fields = lines[i].components(separatedBy: ",")
@@ -359,14 +364,14 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
                                 let fieldsOfNextLine = nextLine.split(separator: ",")
                                 if let firstFieldsOfNextLine = fieldsOfNextLine.first {
                                     let indexOfFirstCharacter = nextLine.index(nextLine.startIndex, offsetBy: firstFieldsOfNextLine.count)
+                                    // the rest of the content in the second line of this two-line record except for the first field which is redundant and useless
                                     
                                     nextLine = "\(nextLine[indexOfFirstCharacter...])"
                                     
                                 }
+                                // merge the processed two lines into one line/record
                                 quotationMarkProcessedLine.append(nextLine)
-                                quotationMarkProcessedLines.append(quotationMarkProcessedLine)
                                 isSkipingLine = true
-                                continue
                             }
                         }
                     }
@@ -376,32 +381,18 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
         }
 
         for i in 0..<quotationMarkProcessedLines.count {
+            
+            let fields = quotationMarkProcessedLines[i].components(separatedBy: ",")
+            
+            if !fields.first!.isEmpty {
+                
+                currentSymbology = fields.first!
+                print("********\(currentSymbology)********")
+            
+            }
+            
             print(quotationMarkProcessedLines[i])
         }
-        
-        
-        
-        
-        
-//        for i in 0..<rows.count {
-//
-//            let row: String = rows[i]
-//            let columns = row.components(separatedBy: ",") // line based parsing
-//            if !columns[0].isEmpty { // the first column exist then this line is for symbology name
-//                if let firstColumn = columns.first {
-//                    if firstColumn.hasSuffix("\"") {
-//                        continue
-//                    } else {
-//                        print("********\(columns[0])*******")
-//                        currentSymbology = columns[0]
-//                        continue
-//                    }
-//                }
-//            }
-//
-//            print("\(row)\n------------")
-//
-//        }
         
     }
 
