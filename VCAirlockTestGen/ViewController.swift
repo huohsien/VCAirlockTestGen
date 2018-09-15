@@ -283,24 +283,24 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
 
 
 """
-        struct Record {
-            var symbology_name: String
-            var param_name: String
-            var supported: String
-            var default_cl_value: String
-            var valid_values: String
-            var invalid_values: String
+        class Record {
+            
+            var symbology_name: String? = nil
+            var param_name: String? = nil
+            var supported: String? = nil
+            var default_cl_value: String? = nil
+            var valid_values: String? = nil
+            
+            func cleanUPAllFields() {
+                self.symbology_name = nil
+                self.param_name = nil
+                self.supported = nil
+                self.default_cl_value = nil
+                self.valid_values = nil
+            }
         }
         
-//        var table:[Record]
-        
-        //var symbology_name = [String]()
-        //var param_name = [String]()
-        //var supported = [String]()
-        //var default_cl_value = [String]()
-        //var valid_values = [String]()
-        //var invalid_values = [String]()
-        
+        var table = [Record]()
         var currentSymbology: String
         var hasOpeningQuote = false
         
@@ -380,20 +380,77 @@ MicroQR,BarCodeGetSymbology(MicroQR),,,
             quotationMarkProcessedLines.append(quotationMarkProcessedLine)
         }
 
+        var record: Record
+        
+        currentSymbology = ""
+        
         for i in 0..<quotationMarkProcessedLines.count {
             
-            let fields = quotationMarkProcessedLines[i].components(separatedBy: ",")
+            var fields = quotationMarkProcessedLines[i].components(separatedBy: ",")
             
             if !fields.first!.isEmpty {
                 
+                // it is a symbology defining line. So we got a new symbology
                 currentSymbology = fields.first!
-                print("********\(currentSymbology)********")
-            
+//                print("********\(currentSymbology)********")
+                
+                
+            } else if fields.count > 1 {
+                record = Record()
+
+                // It is not a symbology defining line but a line that describes property such as its name, supported or not, default valuen and valid values
+                
+                for j in 1..<fields.count {
+                    // loop through all fields of a property
+                    fields[j] = fields[j].replacingOccurrences(of: "\"", with: "")
+                    
+                    //remove white spaces. I don't really understand it but cut it from StackOverflow!
+                    fields[j] = String(fields[j].filter { !" ".contains($0) })
+
+//                    let delimiter = j < fields.count - 1 ? "," : ""
+//                    print("\(fields[j])\(delimiter)", separator: "", terminator: "")
+                }
+                // set current symbology
+                record.symbology_name = currentSymbology
+                
+                // set fields of the property defined in this line
+                
+                // param_name
+                record.param_name = fields[1]
+                
+                // supported or not
+                if fields[2].contains("V") {
+                    record.supported = "Y"
+                } else if fields[2].contains("N") {
+                    record.supported = "N"
+                } else if fields[2].isEmpty {
+                    record.supported = "N"
+                } else {
+                    print("\n************************************************************\n************************ ERROR: \(fields[1]) ************************")
+                    break
+                }
+                
+                // default value
+                record.default_cl_value = fields[3]
+                
+                // valid value
+                
+                var normalizedString = fields[4]
+                normalizedString = normalizedString.replacingOccurrences(of: String(delimiter), with: ",")
+                
+                record.valid_values = fields[4]
+
+//                print("")
+                if i > 0 {
+                    table.append(record)
+                }
             }
-            
-            print(quotationMarkProcessedLines[i])
         }
-        
+        for i in 0..<table.count {
+            let record = table[i]
+            
+            print("\(i)->Symbology:\(record.symbology_name!)\tProperty: \(record.param_name!)\tSupport: \(record.supported!)\tDefault Value:\(record.default_cl_value!)\tValid values: \(record.valid_values!)")
+        }
     }
 
 }
